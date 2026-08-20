@@ -4,7 +4,7 @@ from PIL import Image
 
 st.set_page_config(page_title="품번 조회 시스템", layout="centered")
 
-st.title("📦 품번 이미지 조회 시스템")
+st.title("📦 GSPACKING 품번 이미지 조회 시스템")
 st.markdown("조회할 제품의 품번을 입력해 주세요.")
 
 IMAGE_FOLDER = "images" 
