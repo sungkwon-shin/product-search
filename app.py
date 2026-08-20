@@ -1,59 +1,55 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>품번 조회 뷰어</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        .search-box { padding: 10px; width: 80%; font-size: 16px; margin-bottom: 20px; }
-        .img-container { display: flex; flex-direction: column; align-items: center; }
-        img { width: 100%; max-width: 500px; border-radius: 8px; cursor: pointer; }
-    </style>
-</head>
-<body>
+import streamlit as st
+import streamlit.components.v1 as components
+import os
+from PIL import Image
 
-    <h2>📦 품번 이미지 조회</h2>
-    <input type="text" id="searchInput" class="search-box" placeholder="품번 입력 (예: a123)">
-    <div id="result"></div>
+st.set_page_config(page_title="품번 조회 시스템", layout="centered")
 
+# [핵심] 스트림릿이 강제로 막아둔 '모바일 줌(Zoom)' 기능을 강제로 풀어버리는 스크립트
+components.html(
+    """
     <script>
-        // 이미지 검색 로직
-        document.getElementById('searchInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                const term = this.value.trim().toLowerCase();
-                // 여기에 이미지 폴더의 경로를 매칭 (이미지 파일명이 예: a123.jpg 라고 가정)
-                const imgPath = 'images/' + term + '.jpg'; 
-                
-                const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = `
-                    <p>✅ 품번 [${term}] 검색 완료</p>
-                    <img src="${imgPath}" onclick="openViewer(this.src)" onerror="this.onerror=null;this.src='error.png';alert('이미지를 찾을 수 없습니다.')">
-                `;
-            }
-        });
-
-        // 클릭하면 전체화면으로 열리고, 다시 누르면 닫히는 가장 순수한 뷰어 로직
-        function openViewer(src) {
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0'; overlay.style.left = '0';
-            overlay.style.width = '100vw'; overlay.style.height = '100vh';
-            overlay.style.backgroundColor = 'rgba(0,0,0,0.95)';
-            overlay.style.zIndex = '9999';
-            overlay.style.display = 'flex';
-            overlay.style.justifyContent = 'center';
-            overlay.style.alignItems = 'center';
-            overlay.onclick = () => overlay.remove(); // 배경 아무 데나 누르면 닫힘
-
-            const img = document.createElement('img');
-            img.src = src;
-            img.style.maxWidth = '100%';
-            img.style.maxHeight = '100%';
-            
-            overlay.appendChild(img);
-            document.body.appendChild(overlay);
-        }
+    const parent = window.parent.document;
+    let meta = parent.querySelector('meta[name="viewport"]');
+    if (meta) {
+        meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+    }
     </script>
-</body>
-</html>
+    """,
+    height=0, width=0
+)
+
+st.title("📦 품번 이미지 조회 시스템")
+st.markdown("조회할 제품의 품번을 입력해 주세요.")
+
+IMAGE_FOLDER = "images" 
+
+with st.form(key="search_form"):
+    product_id = st.text_input("🔍 품번 입력", placeholder="예: a123 또는 A123")
+    submit_button = st.form_submit_button("이미지 검색", use_container_width=True)
+
+if submit_button:
+    if product_id:
+        search_term = product_id.strip().lower()
+        found = False
+        
+        if os.path.exists(IMAGE_FOLDER):
+            for filename in os.listdir(IMAGE_FOLDER):
+                name, ext = os.path.splitext(filename)
+                
+                if name.lower() == search_term and ext.lower() in ['.jpg', '.jpeg', '.png']:
+                    file_path = os.path.join(IMAGE_FOLDER, filename)
+                    image = Image.open(file_path)
+                    
+                    st.success(f"✅ 품번 [{name}] 검색 완료")
+                    
+                    # 팝업이나 버튼 없이 그냥 화면에 출력합니다.
+                    st.image(image, caption="👆 두 손가락으로 화면을 쫙 벌려 확대해 보세요.", use_container_width=True)
+                    
+                    found = True
+                    break
+                    
+        if not found:
+            st.error(f"⚠️ [{product_id}] 이미지를 찾을 수 없습니다.")
+    else:
+        st.warning("⚠️ 검색할 품번을 입력해 주세요.")
