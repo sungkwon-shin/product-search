@@ -24,17 +24,18 @@ if submit_button:
                 
                 if name.lower() == search_term and ext.lower() in ['.jpg', '.jpeg', '.png']:
                     file_path = os.path.join(IMAGE_FOLDER, filename)
-                    
-                    st.success(f"✅ 품번 [{name}] 검색 완료")
-                    
-                    # 1. PIL로 이미지를 안전하게 오픈
                     image = Image.open(file_path)
+                    
                     if image.mode != 'RGB':
                         image = image.convert('RGB')
                         
-                    # 2. 스트림릿이 가장 사랑하는 공식 이미지 출력 함수 사용 (절대 백지 안 됨!)
-                    # 이 함수 자체에 우측 상단 '확대(Full screen)' 버튼이 내장되어 있습니다.
-                    st.image(image, caption=f"품번: {name} (우측 상단 돋보기 버튼을 누르면 크게 열립니다)", use_container_width=True)
+                    st.success(f"✅ 품번 [{name}] 검색 완료")
+                    
+                    # 스트림릿 공식 이미지 출력 (우측 상단 전체화면 돋보기 버튼 자동 생성)
+                    st.image(image, caption=f"품번: {name}", use_container_width=True)
+                    
+                    # 💡 대안 안내 문구
+                    st.info("💡 **팁:** 이미지 우측 상단의 **[⤢ 전체 화면(돋보기)]** 아이콘을 누르면 새 창처럼 크게 확대해서 보실 수 있습니다.")
                     
                     found = True
                     break
