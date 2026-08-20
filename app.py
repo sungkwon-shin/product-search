@@ -1,21 +1,44 @@
 import streamlit as st
 import os
+import base64
+from io import BytesIO
 from PIL import Image
 
 st.set_page_config(page_title="품번 조회 시스템", layout="centered")
+
+# 사진 클릭 시 전체화면으로 만들어주는 마법의 CSS 코드
+st.markdown("""
+    <style>
+    .custom-img {
+        width: 100%;
+        cursor: zoom-in;
+        border-radius: 8px;
+        transition: 0.3s;
+    }
+    .custom-img.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: contain;
+        background-color: rgba(0,0,0,0.9);
+        z-index: 99999;
+        cursor: zoom-out;
+        padding: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("📦 품번 이미지 조회 시스템")
 st.markdown("조회할 제품의 품번을 입력해 주세요.")
 
 IMAGE_FOLDER = "images" 
 
-# st.form을 사용하여 입력창과 버튼을 묶어주면 엔터키로 검색이 가능해집니다.
 with st.form(key="search_form"):
     product_id = st.text_input("🔍 품번 입력", placeholder="예: a123 또는 A123")
-    # st.form 안에서는 st.button 대신 st.form_submit_button을 사용합니다.
     submit_button = st.form_submit_button("이미지 검색", use_container_width=True)
 
-# 버튼이 눌리거나 엔터키가 입력되었을 때 실행됨
 if submit_button:
     if product_id:
         search_term = product_id.strip().lower()
@@ -30,7 +53,25 @@ if submit_button:
                     image = Image.open(file_path)
                     
                     st.success(f"✅ 품번 [{name}] 검색 완료")
-                    st.image(image, caption=f"품번: {name}", use_container_width=True)
+                    
+                    # 이미지를 웹에서 클릭할 수 있는 형태로 변환
+                    buffered = BytesIO()
+                    if image.mode != 'RGB':
+                        image = image.convert('RGB')
+                    image.save(buffered, format="JPEG")
+                    img_str = base64.b64encode(buffered.getvalue()).decode()
+                    
+                    # 사진 자체를 클릭하면 확대/축소되도록 설정
+                    html_code = f'''
+                        <img src="data:image/jpeg;base64,{img_str}" 
+                             class="custom-img" 
+                             onclick="this.classList.toggle('fullscreen')">
+                        <p style="text-align: center; color: gray; font-size: 14px; margin-top: 10px;">
+                            👆 사진을 터치하면 전체 화면으로 확대됩니다.
+                        </p>
+                    '''
+                    st.markdown(html_code, unsafe_allow_html=True)
+                    
                     found = True
                     break
                     
