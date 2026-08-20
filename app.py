@@ -1,20 +1,11 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import os
 import base64
 from io import BytesIO
 from PIL import Image
 
 st.set_page_config(page_title="품번 조회 시스템", layout="centered")
-
-# [핵심] 안드로이드/아이폰 스마트폰에서 '두 손가락 확대(핀치 줌)' 차단을 강제로 해제하는 마법의 코드
-st.markdown("""
-    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onload="
-        var meta = document.querySelector('meta[name=viewport]');
-        if(meta) {
-            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes';
-        }
-    " style="display:none;">
-""", unsafe_allow_html=True)
 
 st.title("📦 품번 이미지 조회 시스템")
 st.markdown("조회할 제품의 품번을 입력해 주세요.")
@@ -40,36 +31,54 @@ if submit_button:
                     
                     st.success(f"✅ 품번 [{name}] 검색 완료")
                     
-                    # 이미지 변환
+                    # 이미지를 웹용으로 변환
                     buffered = BytesIO()
                     if image.mode != 'RGB':
                         image = image.convert('RGB')
                     image.save(buffered, format="JPEG")
                     img_str = base64.b64encode(buffered.getvalue()).decode()
                     
-                    # 갤러리 뷰어 (라이트박스)
-                    html_code = f'''
-                    <style>
-                    .thumb {{ cursor: zoom-in; border-radius: 8px; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
-                    .modal {{
-                        display: none; position: fixed; z-index: 99999; left: 0; top: 0;
-                        width: 100%; height: 100%; background-color: rgba(0,0,0,0.95);
-                        justify-content: center; align-items: center;
-                    }}
-                    .modal-content {{ max-width: 100%; max-height: 100%; object-fit: contain; }}
-                    </style>
-
-                    <!-- 이미지 클릭 시 모달 열기 -->
-                    <img src="data:image/jpeg;base64,{img_str}" class="thumb" onclick="document.getElementById('myModal').style.display='flex'">
-
-                    <!-- 모달창 (터치하면 닫힘) -->
-                    <div id="myModal" class="modal" onclick="this.style.display='none'">
-                        <img class="modal-content" src="data:image/jpeg;base64,{img_str}">
-                    </div>
-                    '''
-                    st.markdown(html_code, unsafe_allow_html=True)
+                    # [핵심] 안드로이드 차단을 무시하고 두 손가락 확대를 강제로 실행하는 전문 갤러리 엔진
+                    html_code = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+                      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.3/viewer.min.css">
+                      <style>
+                        body {{ margin: 0; display: flex; justify-content: center; background-color: transparent; }}
+                        .img-container {{ width: 100%; cursor: pointer; }}
+                        img {{ width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+                      </style>
+                    </head>
+                    <body>
+                      <div class="img-container">
+                        <img id="image" src="data:image/jpeg;base64,{img_str}">
+                      </div>
+                      
+                      <!-- 전 세계적으로 쓰이는 검증된 줌(Zoom) 라이브러리 탑재 -->
+                      <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.3/viewer.min.js"></script>
+                      <script>
+                        const viewer = new Viewer(document.getElementById('image'), {{
+                          inline: false,
+                          toolbar: false,
+                          navbar: false,
+                          title: false,
+                          button: true,    // 우측 상단 닫기(X) 버튼 생성
+                          backdrop: true,  // 검은 배경 생성
+                          zoomable: true,  // 두 손가락 핀치 줌 완벽 지원!
+                          movable: true,   // 드래그 이동 지원
+                          transition: true
+                        }});
+                      </script>
+                    </body>
+                    </html>
+                    """
                     
-                    st.info("👆 사진을 터치하면 크게 열립니다. 열린 상태에서 스마트폰 화면을 두 손가락으로 확대/축소할 수 있습니다.")
+                    # 뷰어가 잘 작동하도록 넉넉한 공간(높이 550)을 할당
+                    components.html(html_code, height=550)
+                    
+                    st.info("👆 사진을 터치하면 갤러리가 열립니다. 열린 상태에서 스마트폰 화면을 두 손가락으로 자유롭게 확대/축소하세요.")
                     found = True
                     break
                     
