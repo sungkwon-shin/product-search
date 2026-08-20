@@ -1,18 +1,10 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import os
 import base64
 from io import BytesIO
 from PIL import Image
 
 st.set_page_config(page_title="품번 조회 시스템", layout="centered")
-
-# 기존 스트림릿 돋보기 기능 강제 삭제
-st.markdown("""
-    <style>
-    button[title="View fullscreen"] { display: none !important; }
-    </style>
-""", unsafe_allow_html=True)
 
 st.title("📦 품번 이미지 조회 시스템")
 st.markdown("조회할 제품의 품번을 입력해 주세요.")
@@ -38,70 +30,38 @@ if submit_button:
                     
                     st.success(f"✅ 품번 [{name}] 검색 완료")
                     
-                    # 이미지를 웹용으로 변환
+                    # 이미지 변환
                     buffered = BytesIO()
                     if image.mode != 'RGB':
                         image = image.convert('RGB')
                     image.save(buffered, format="JPEG")
                     img_str = base64.b64encode(buffered.getvalue()).decode()
                     
-                    # 강력한 Zoom 기능이 탑재된 HTML/JS 뷰어 컴포넌트
-                    html_code = f"""
-                    <div id="wrapper" style="width: 100%; height: 500px; border-radius: 8px; overflow: hidden; background-color: #f8f9fa; position: relative; display: flex; justify-content: center; align-items: center; border: 1px solid #ddd; touch-action: none;">
-                        <img id="myImg" src="data:image/jpeg;base64,{img_str}" style="max-width: 100%; max-height: 100%; cursor: zoom-in;">
+                    # [갤러리 뷰어 핵심 코드] 클릭 시 모달창(전체화면)이 뜹니다.
+                    html_code = f'''
+                    <style>
+                    /* 1. 작은 이미지 스타일 */
+                    .thumb {{ cursor: zoom-in; border-radius: 8px; width: 100%; }}
+                    
+                    /* 2. 전체화면 모달 (기본은 숨김) */
+                    .modal {{
+                        display: none; position: fixed; z-index: 9999; left: 0; top: 0;
+                        width: 100%; height: 100%; background-color: rgba(0,0,0,0.9);
+                        justify-content: center; align-items: center; cursor: zoom-out;
+                    }}
+                    /* 3. 모달 안의 이미지 */
+                    .modal-content {{ max-width: 95%; max-height: 95%; object-fit: contain; }}
+                    </style>
+
+                    <!-- 이미지 클릭 시 모달 열기 -->
+                    <img src="data:image/jpeg;base64,{img_str}" class="thumb" onclick="document.getElementById('myModal').style.display='flex'">
+
+                    <!-- 모달창 -->
+                    <div id="myModal" class="modal" onclick="this.style.display='none'">
+                        <img class="modal-content" src="data:image/jpeg;base64,{img_str}">
                     </div>
-                    <p style="text-align: center; color: #555; font-size: 14px; margin-top: 10px; font-family: sans-serif; line-height: 1.6;">
-                        👆 <b>사진 터치(클릭)</b>: 2.5배 확대 및 원상복구<br>
-                        🖱️ <b>마우스 휠 / 두 손가락</b>: 자유롭게 추가 확대·축소<br>
-                        🖐️ <b>드래그(스와이프)</b>: 커진 상태에서 상하좌우 이동
-                    </p>
-                    
-                    <!-- Panzoom 라이브러리 로드 -->
-                    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
-                    <script>
-                        const elem = document.getElementById('myImg');
-                        const wrapper = document.getElementById('wrapper');
-                        
-                        // 줌 기능 활성화 (최대 10배 확대 가능)
-                        const panzoom = Panzoom(elem, {{
-                            maxScale: 10,
-                            minScale: 1,
-                            step: 0.2
-                        }});
-
-                        // PC 마우스 휠 확대/축소 연결
-                        wrapper.addEventListener('wheel', panzoom.zoomWithWheel);
-
-                        // 클릭 시 2.5배 확대 및 원상복구 로직
-                        let isZoomed = false;
-                        elem.addEventListener('click', (e) => {{
-                            if (!isZoomed) {{
-                                // 클릭한 마우스 위치를 중심으로 2.5배 확대
-                                panzoom.zoomToPoint(2.5, {{ clientX: e.clientX, clientY: e.clientY }});
-                                isZoomed = true;
-                                elem.style.cursor = 'grab';
-                            }} else {{
-                                panzoom.reset();
-                                isZoomed = false;
-                                elem.style.cursor = 'zoom-in';
-                            }}
-                        }});
-
-                        // 휠이나 손가락 핀치로 크기가 바뀌었을 때 상태 업데이트
-                        elem.addEventListener('panzoomzoom', (e) => {{
-                            if (e.detail.scale <= 1) {{
-                                isZoomed = false;
-                                elem.style.cursor = 'zoom-in';
-                            }} else {{
-                                isZoomed = true;
-                                elem.style.cursor = 'grab';
-                            }}
-                        }});
-                    </script>
-                    """
-                    
-                    # 스트림릿에 커스텀 HTML 뷰어 출력 (높이 600px 할당)
-                    components.html(html_code, height=600)
+                    '''
+                    st.markdown(html_code, unsafe_allow_html=True)
                     
                     found = True
                     break
