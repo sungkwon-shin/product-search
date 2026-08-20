@@ -32,9 +32,11 @@ if submit_button:
                     if image.mode != 'RGB':
                         image = image.convert('RGB')
                         
-                    # 스트림릿 내장 이미지 뷰어 (모바일/PC 모두 완벽 지원)
-                    # 우측 상단 돋보기(Full screen)를 누르거나 터치하면 폰 자체 뷰어로 확대됩니다.
+                    # 스트림릿 내장 이미지 출력
                     st.image(image, caption=f"품번: {name}", use_container_width=True)
+                    
+                    # 안드로이드 사용자 안내 멘트
+                    st.info("💡 **현장 작업자 가이드:** 이미지를 터치하거나 우측 상단의 **[전체화면 돋보기]**를 누르시면, 안드로이드 기본 뷰어로 전환되어 손가락으로 자유롭게 확대 및 부분 이동이 가능합니다.")
                     
                     found = True
                     break
