@@ -1,23 +1,15 @@
 import streamlit as st
 import os
+import base64
+from io import BytesIO
 from PIL import Image
 
 st.set_page_config(page_title="품번 조회 시스템", layout="centered")
 
-# 핵심 해결책: 우측 상단의 쪼그만 '확대 버튼'을 사진 전체 크기로 늘려서 투명하게 덮어버립니다.
+# 스트림릿의 기본 '전체화면 돋보기 버튼'을 아예 보이지 않게 삭제합니다.
 st.markdown("""
     <style>
-    button[title="View fullscreen"], [data-testid="StyledFullScreenButton"] {
-        width: 100% !important;
-        height: 100% !important;
-        top: 0 !important;
-        left: 0 !important;
-        position: absolute !important;
-        opacity: 0 !important; 
-        z-index: 99 !important;
-        display: block !important;
-        visibility: visible !important;
-    }
+    button[title="View fullscreen"] { display: none !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -45,8 +37,49 @@ if submit_button:
                     
                     st.success(f"✅ 품번 [{name}] 검색 완료")
                     
-                    # 사진 출력 (보이지 않는 거대한 확대 버튼이 사진을 덮고 있습니다)
-                    st.image(image, caption="👆 사진 아무 곳이나 터치하면 전체 화면으로 꽉 차게 확대됩니다.", use_container_width=True)
+                    # 이미지를 변환 (HTML에서 마음대로 크기 조절을 하기 위함)
+                    buffered = BytesIO()
+                    if image.mode != 'RGB':
+                        image = image.convert('RGB')
+                    image.save(buffered, format="JPEG")
+                    img_str = base64.b64encode(buffered.getvalue()).decode()
+                    
+                    # 사진을 클릭하면 그 자리에서 2.5배(250%) 커지는 기능
+                    html_code = f'''
+                        <style>
+                        .zoom-container {{
+                            width: 100%;
+                            overflow: auto; /* 커졌을 때 밀어서 볼 수 있게 스크롤 생성 */
+                            border-radius: 8px;
+                            margin-top: 10px;
+                        }}
+                        .zoom-checkbox {{ display: none; }}
+                        .zoom-img {{
+                            width: 100%;
+                            cursor: zoom-in;
+                            transition: width 0.3s ease-in-out;
+                            display: block;
+                        }}
+                        /* 사진이 터치되었을 때 폭을 2.5배로 쫙 늘림 */
+                        .zoom-checkbox:checked ~ .zoom-img {{
+                            width: 250%; 
+                            max-width: none;
+                            cursor: zoom-out;
+                        }}
+                        </style>
+                        
+                        <div class="zoom-container">
+                            <label style="margin: 0; padding: 0; display: block; width: 100%;">
+                                <input type="checkbox" class="zoom-checkbox">
+                                <img src="data:image/jpeg;base64,{img_str}" class="zoom-img">
+                            </label>
+                        </div>
+                        
+                        <p style="text-align: center; color: gray; font-size: 14px; margin-top: 15px;">
+                            👆 사진을 터치하면 그 자리에서 <b>2.5배 확대</b>됩니다.<br>(확대 후 손가락으로 밀어서 볼 수 있습니다)
+                        </p>
+                    '''
+                    st.markdown(html_code, unsafe_allow_html=True)
                     
                     found = True
                     break
