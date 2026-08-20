@@ -69,7 +69,7 @@ if submit_button:
                         
                         // 줌 기능 활성화 (최대 배율 10 -> 50으로 대폭 상향)
                         const panzoom = Panzoom(elem, {{
-                            maxScale: 100,
+                            maxScale: 50,
                             minScale: 1,
                             step: 0.3
                         }});
