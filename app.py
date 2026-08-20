@@ -45,7 +45,7 @@ if submit_button:
                     image.save(buffered, format="JPEG")
                     img_str = base64.b64encode(buffered.getvalue()).decode()
                     
-                    # 💡 수정된 부분: 우측 상단 배지 추가 및 줌 비율 대폭 상향
+                    # 💡 더블클릭 이벤트로 변경 및 안내 문구 수정
                     html_code = f"""
                     <div id="wrapper" style="width: 100%; height: 500px; border-radius: 8px; overflow: hidden; background-color: #f8f9fa; position: relative; display: flex; justify-content: center; align-items: center; border: 1px solid #ddd; touch-action: none;">
                         <!-- 실시간 확대 퍼센트 배지 -->
@@ -55,7 +55,7 @@ if submit_button:
                         <img id="myImg" src="data:image/jpeg;base64,{img_str}" style="max-width: 100%; max-height: 100%; cursor: zoom-in;">
                     </div>
                     <p style="text-align: center; color: #555; font-size: 14px; margin-top: 10px; font-family: sans-serif; line-height: 1.6;">
-                        👆 <b>사진 터치(클릭)</b>: 3배 확대 및 원상복구<br>
+                        👆 <b>사진 더블 터치(따닥!)</b>: 3배 확대 및 원상복구<br>
                         🖱️ <b>마우스 휠 / 두 손가락</b>: 자유롭게 추가 확대·축소 (최대 50배)<br>
                         🖐️ <b>드래그(스와이프)</b>: 커진 상태에서 상하좌우 이동
                     </p>
@@ -67,7 +67,7 @@ if submit_button:
                         const wrapper = document.getElementById('wrapper');
                         const zoomIndicator = document.getElementById('zoom-indicator');
                         
-                        // 줌 기능 활성화 (최대 배율 10 -> 50으로 대폭 상향)
+                        // 줌 기능 활성화
                         const panzoom = Panzoom(elem, {{
                             maxScale: 50,
                             minScale: 1,
@@ -77,11 +77,11 @@ if submit_button:
                         // PC 마우스 휠 확대/축소 연결
                         wrapper.addEventListener('wheel', panzoom.zoomWithWheel);
 
-                        // 클릭 시 3배 확대 및 원상복구 로직
+                        // [핵심] 더블 클릭(dblclick) 시 3배 확대 및 원상복구 로직
                         let isZoomed = false;
-                        elem.addEventListener('click', (e) => {{
+                        elem.addEventListener('dblclick', (e) => {{
                             if (!isZoomed) {{
-                                // 클릭한 마우스 위치를 중심으로 3배 확대
+                                // 더블 클릭한 마우스 위치를 중심으로 3배 확대
                                 panzoom.zoomToPoint(3.0, {{ clientX: e.clientX, clientY: e.clientY }});
                                 isZoomed = true;
                                 elem.style.cursor = 'grab';
@@ -110,7 +110,7 @@ if submit_button:
                     </script>
                     """
                     
-                    # 스트림릿에 커스텀 HTML 뷰어 출력 (높이 600px 할당)
+                    # 스트림릿에 커스텀 HTML 뷰어 출력
                     components.html(html_code, height=600)
                     
                     found = True
