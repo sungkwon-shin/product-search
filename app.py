@@ -71,7 +71,7 @@ if submit_button:
                         const panzoom = Panzoom(elem, {{
                             maxScale: 50,
                             minScale: 1,
-                            step: 0.8
+                            step: 1.2
                         }});
 
                         // PC 마우스 휠 확대/축소 연결
