@@ -30,24 +30,33 @@ if submit_button:
                     
                     st.success(f"✅ 품번 [{name}] 검색 완료")
                     
-                    # 이미지를 웹용 데이터로 변환
                     buffered = BytesIO()
                     if image.mode != 'RGB':
                         image = image.convert('RGB')
                     image.save(buffered, format="JPEG")
                     img_str = base64.b64encode(buffered.getvalue()).decode()
                     
-                    # [모바일 최적화 뷰어] 억지로 팝업을 띄우지 않고, 
-                    # 브라우저의 기본 이미지 뷰어로 즉시 연결합니다.
+                    # 크롬/안드로이드 보안을 우회하는 표준 Blob 방식
                     html_code = f'''
                     <div style="text-align: center;">
-                        <a href="data:image/jpeg;base64,{img_str}" target="_blank">
-                            <img src="data:image/jpeg;base64,{img_str}" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: zoom-in;">
-                        </a>
+                        <img id="product-img" src="data:image/jpeg;base64,{img_str}" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: zoom-in;">
                         <p style="color: gray; font-size: 14px; margin-top: 15px;">
-                            👆 사진을 터치하면 <b>폰 자체 뷰어</b>로 크게 열립니다.
+                            👆 사진을 터치하면 <b>크롬 전용 뷰어</b>로 열립니다.
                         </p>
                     </div>
+
+                    <script>
+                    document.getElementById('product-img').onclick = function() {{
+                        const base64 = '{img_str}';
+                        const byteString = atob(base64);
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        for (let i = 0; i < byteString.length; i++) {{ ia[i] = byteString.charCodeAt(i); }}
+                        const blob = new Blob([ab], {{type: 'image/jpeg'}});
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                    }};
+                    </script>
                     '''
                     st.markdown(html_code, unsafe_allow_html=True)
                     
