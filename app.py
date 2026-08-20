@@ -1,7 +1,5 @@
 import streamlit as st
 import os
-import base64
-from io import BytesIO
 from PIL import Image
 
 st.set_page_config(page_title="품번 조회 시스템", layout="centered")
@@ -30,35 +28,8 @@ if submit_button:
                     
                     st.success(f"✅ 품번 [{name}] 검색 완료")
                     
-                    buffered = BytesIO()
-                    if image.mode != 'RGB':
-                        image = image.convert('RGB')
-                    image.save(buffered, format="JPEG")
-                    img_str = base64.b64encode(buffered.getvalue()).decode()
-                    
-                    # 크롬/안드로이드 보안을 우회하는 표준 Blob 방식
-                    html_code = f'''
-                    <div style="text-align: center;">
-                        <img id="product-img" src="data:image/jpeg;base64,{img_str}" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: zoom-in;">
-                        <p style="color: gray; font-size: 14px; margin-top: 15px;">
-                            👆 사진을 터치하면 <b>크롬 전용 뷰어</b>로 열립니다.
-                        </p>
-                    </div>
-
-                    <script>
-                    document.getElementById('product-img').onclick = function() {{
-                        const base64 = '{img_str}';
-                        const byteString = atob(base64);
-                        const ab = new ArrayBuffer(byteString.length);
-                        const ia = new Uint8Array(ab);
-                        for (let i = 0; i < byteString.length; i++) {{ ia[i] = byteString.charCodeAt(i); }}
-                        const blob = new Blob([ab], {{type: 'image/jpeg'}});
-                        const url = URL.createObjectURL(blob);
-                        window.open(url, '_blank');
-                    }};
-                    </script>
-                    '''
-                    st.markdown(html_code, unsafe_allow_html=True)
+                    # 가장 기본적인 출력 방식입니다. (브라우저의 기본 이미지 뷰어를 사용합니다.)
+                    st.image(image, use_container_width=True)
                     
                     found = True
                     break
