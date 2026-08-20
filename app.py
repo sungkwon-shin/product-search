@@ -9,27 +9,26 @@ st.markdown("조회할 제품의 품번을 입력해 주세요.")
 
 IMAGE_FOLDER = "images" 
 
-# 안내 문구도 대소문자 상관없다는 것을 명시
-product_id = st.text_input("🔍 품번 입력", placeholder="예: a123 또는 A123")
+# st.form을 사용하여 입력창과 버튼을 묶어주면 엔터키로 검색이 가능해집니다.
+with st.form(key="search_form"):
+    product_id = st.text_input("🔍 품번 입력", placeholder="예: a123 또는 A123")
+    # st.form 안에서는 st.button 대신 st.form_submit_button을 사용합니다.
+    submit_button = st.form_submit_button("이미지 검색", use_container_width=True)
 
-if st.button("이미지 검색", use_container_width=True):
+# 버튼이 눌리거나 엔터키가 입력되었을 때 실행됨
+if submit_button:
     if product_id:
-        # 1. 사용자가 입력한 검색어를 무조건 소문자로 싹 변환하고 공백 제거
         search_term = product_id.strip().lower()
         found = False
         
-        # 2. 이미지 폴더 안의 모든 사진을 하나씩 검사
         if os.path.exists(IMAGE_FOLDER):
             for filename in os.listdir(IMAGE_FOLDER):
-                # 파일 이름과 확장자를 분리 (예: 'A123'과 '.jpg')
                 name, ext = os.path.splitext(filename)
                 
-                # 3. 사진 이름도 무조건 소문자로 바꿔서 검색어와 비교! 
                 if name.lower() == search_term and ext.lower() in ['.jpg', '.jpeg', '.png']:
                     file_path = os.path.join(IMAGE_FOLDER, filename)
                     image = Image.open(file_path)
                     
-                    # 화면에 보여줄 때는 원래 사진 이름(대소문자 유지)으로 출력
                     st.success(f"✅ 품번 [{name}] 검색 완료")
                     st.image(image, caption=f"품번: {name}", use_container_width=True)
                     found = True
