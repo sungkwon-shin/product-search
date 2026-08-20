@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 from PIL import Image
-from streamlit_image_zoom import image_zoom
 
 st.set_page_config(page_title="품번 조회 시스템", layout="centered")
 
@@ -33,15 +32,9 @@ if submit_button:
                     if image.mode != 'RGB':
                         image = image.convert('RGB')
                         
-                    # [핵심] 안드로이드에서 화면 안에서 바로 부분 확대/이동이 가능한 전용 줌 뷰어 적용
-                    # mode="dragmove": 터치하고 드래그하면 원하는 부위를 자유롭게 이동하며 확대해서 볼 수 있습니다.
-                    image_zoom(
-                        image, 
-                        mode="dragmove", 
-                        size=(600, 600), 
-                        zoom_factor=2.5, 
-                        keep_aspect_ratio=True
-                    )
+                    # 스트림릿 내장 이미지 뷰어 (모바일/PC 모두 완벽 지원)
+                    # 우측 상단 돋보기(Full screen)를 누르거나 터치하면 폰 자체 뷰어로 확대됩니다.
+                    st.image(image, caption=f"품번: {name}", use_container_width=True)
                     
                     found = True
                     break
