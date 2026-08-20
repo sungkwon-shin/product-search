@@ -111,7 +111,7 @@ if submit_button:
                     """
                     
                     # 스트림릿에 커스텀 HTML 뷰어 출력
-                    components.html(html_code, height=600)
+                    components.html(html_code, height=300)
                     
                     found = True
                     break
